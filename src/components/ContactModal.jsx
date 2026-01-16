@@ -75,12 +75,25 @@ const ContactModal = ({ isOpen, onClose }) => {
 
             <div className="input-group">
               <label>Teléfono</label>
-              <PhoneInput
-                country={'cl'}
-                value={formData.telefono}
-                onChange={(phone) => setFormData({...formData, telefono: phone})}
-                inputStyle={{ width: '100%' }}
-              />
+                <PhoneInput
+                  country={'cl'}
+                  value={formData.telefono.codigoPais + formData.telefono.prefijo + formData.telefono.numero}
+                  onChange={(value, country, e, formattedValue) => {
+                    // La librería nos da 'country' que contiene el dialCode
+                    const dialCode = country.dialCode;
+                    const phoneNumber = value.slice(dialCode.length); // El resto es el número + prefijo
+
+                    setFormData({
+                      ...formData,
+                      telefono: {
+                        codigoPais: dialCode,
+                        prefijo: country.areaCode || "", // Algunos países tienen área, otros no
+                        numero: phoneNumber.replace(country.areaCode, "") // Limpiamos el número
+                      }
+                    });
+                  }}
+                  inputStyle={{ width: '100%' }}
+                />
               {errors.telefono && <span className="error">{errors.telefono}</span>}
             </div>
 
