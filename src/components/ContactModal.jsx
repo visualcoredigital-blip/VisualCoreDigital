@@ -5,11 +5,11 @@ import { X, CheckCircle } from 'lucide-react';
 import './ContactModal.css';
 
 const ContactModal = ({ isOpen, onClose }) => {
-  // Estado inicial limpio
+  // Estado inicial simplificado para evitar errores de prefijo
   const initialFormState = {
     nombre: '',
     email: '',
-    telefono: { codigoPais: '', prefijo: '', numero: '' },
+    telefono: { codigoPais: '', numero: '', formateado: '' },
     empresa: '',
     descripcion: ''
   };
@@ -21,16 +21,18 @@ const ContactModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Validación del lado del cliente
   const validate = () => {
     let tempErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (!formData.nombre.trim()) tempErrors.nombre = "El nombre es obligatorio";
     if (!emailRegex.test(formData.email)) tempErrors.email = "Email corporativo inválido";
-    if (!formData.telefono.numero || formData.telefono.numero.length < 7) {
-      tempErrors.telefono = "Teléfono incompleto o inválido";
+    
+    // Validación mínima: que exista un número más allá del código de país
+    if (!formData.telefono.numero || formData.telefono.numero.length < 5) {
+      tempErrors.telefono = "Número de teléfono incompleto";
     }
+    
     if (!formData.descripcion.trim()) tempErrors.descripcion = "Cuéntanos brevemente sobre tu proyecto";
 
     setErrors(tempErrors);
@@ -54,20 +56,18 @@ const ContactModal = ({ isOpen, onClose }) => {
 
       if (response.ok) {
         setShowSuccess(true);
-        setFormData(initialFormState); // Limpiamos el formulario tras éxito
+        setFormData(initialFormState);
         
-        // Esperamos 2.5 segundos para que vean el check de éxito antes de cerrar
         setTimeout(() => {
           setShowSuccess(false);
           onClose();
         }, 2500);
       } else {
-        // Capturamos errores de validación de Mongoose o del Rate Limit
         alert(data.error || "Hubo un error al procesar tu solicitud.");
       }
     } catch (error) {
       console.error("Error de conexión:", error);
-      alert("No se pudo conectar con el servidor de Visual Core. Verifica tu conexión.");
+      alert("No se pudo conectar con el servidor. Verifica tu conexión.");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,7 +76,6 @@ const ContactModal = ({ isOpen, onClose }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        {/* CABECERA */}
         <div className="modal-header">
           <h2>Contáctenos</h2>
           <button 
@@ -91,14 +90,12 @@ const ContactModal = ({ isOpen, onClose }) => {
 
         <div className="modal-body">
           {showSuccess ? (
-            /* VISTA DE ÉXITO */
             <div className="success-message">
               <CheckCircle size={60} color="#22c55e" />
               <h3>¡Mensaje Enviado!</h3>
-              <p>Gracias por contactar a <strong>Visual Core Digital</strong>. Nuestro equipo de ingeniería te contactará pronto.</p>
+              <p>Gracias por contactar a <strong>Visual Core Digital</strong>.</p>
             </div>
           ) : (
-            /* FORMULARIO */
             <form onSubmit={handleSubmit}>
               <div className="input-group">
                 <label>Nombre Completo</label>
@@ -128,16 +125,19 @@ const ContactModal = ({ isOpen, onClose }) => {
                 <label>Teléfono de Contacto</label>
                 <PhoneInput
                   country={'cl'}
-                  value={formData.telefono.codigoPais + formData.telefono.prefijo + formData.telefono.numero}
-                  onChange={(value, country) => {
+                  // Mostramos el número formateado si existe, sino lo construimos
+                  value={formData.telefono.formateado || formData.telefono.codigoPais + formData.telefono.numero}
+                  onChange={(value, country, e, formattedValue) => {
                     const dialCode = country.dialCode;
-                    const phoneNumber = value.slice(dialCode.length);
+                    // El número es todo lo que viene después del código de país
+                    const pureNumber = value.slice(dialCode.length);
+                    
                     setFormData({
                       ...formData,
                       telefono: {
                         codigoPais: dialCode,
-                        prefijo: country.areaCode || "",
-                        numero: phoneNumber.replace(country.areaCode || "", "")
+                        numero: pureNumber,
+                        formateado: formattedValue // Guardamos el formato amigable: +56 9 1234 5678
                       }
                     });
                   }}
@@ -170,7 +170,6 @@ const ContactModal = ({ isOpen, onClose }) => {
                 {errors.descripcion && <span className="error">{errors.descripcion}</span>}
               </div>
 
-              {/* ACCIONES */}
               <div className="modal-actions">
                 <button 
                   type="button" 
