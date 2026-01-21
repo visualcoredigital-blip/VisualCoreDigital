@@ -11,5 +11,3 @@ COPY . .
 # Exponemos el puerto de Vite
 EXPOSE 5173
 
-# Comando para desarrollo con el host habilitado
-CMD ["npm", "run", "dev", "--", "--host"]
