@@ -3,9 +3,9 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { X, CheckCircle } from 'lucide-react';
 import './ContactModal.css';
+import { API_BASE_URL } from '../config/api';
 
 const ContactModal = ({ isOpen, onClose }) => {
-  // Estado inicial simplificado para evitar errores de prefijo
   const initialFormState = {
     nombre: '',
     email: '',
@@ -28,7 +28,6 @@ const ContactModal = ({ isOpen, onClose }) => {
     if (!formData.nombre.trim()) tempErrors.nombre = "El nombre es obligatorio";
     if (!emailRegex.test(formData.email)) tempErrors.email = "Email corporativo inválido";
     
-    // Validación mínima: que exista un número más allá del código de país
     if (!formData.telefono.numero || formData.telefono.numero.length < 5) {
       tempErrors.telefono = "Número de teléfono incompleto";
     }
@@ -46,7 +45,8 @@ const ContactModal = ({ isOpen, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/contacto', {
+      // Petición al Backend dockerizado (localhost porque el navegador está fuera del contenedor)
+      const response = await fetch(`${API_BASE_URL}/api/contacto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -55,6 +55,7 @@ const ContactModal = ({ isOpen, onClose }) => {
       const data = await response.json();
 
       if (response.ok) {
+        // ÉXITO: Mostramos feedback visual
         setShowSuccess(true);
         setFormData(initialFormState);
         
@@ -63,11 +64,15 @@ const ContactModal = ({ isOpen, onClose }) => {
           onClose();
         }, 2500);
       } else {
-        alert(data.error || "Hubo un error al procesar tu solicitud.");
+        // ERROR CONTROLADO: (Ej: Bloqueo por Spam/Rate Limit o error de validación del server)
+        // Buscamos el mensaje en 'data.error' o 'data.message' según como responda el backend
+        const errorMsg = data.error || data.message || "Hubo un error al procesar tu solicitud.";
+        alert(errorMsg);
       }
     } catch (error) {
+      // ERROR DE RED: (Ej: El contenedor de backend está apagado)
       console.error("Error de conexión:", error);
-      alert("No se pudo conectar con el servidor. Verifica tu conexión.");
+      alert("No se pudo conectar con el servidor. Verifica que los servicios de Docker estén activos.");
     } finally {
       setIsSubmitting(false);
     }
@@ -125,11 +130,9 @@ const ContactModal = ({ isOpen, onClose }) => {
                 <label>Teléfono de Contacto</label>
                 <PhoneInput
                   country={'cl'}
-                  // Mostramos el número formateado si existe, sino lo construimos
                   value={formData.telefono.formateado || formData.telefono.codigoPais + formData.telefono.numero}
                   onChange={(value, country, e, formattedValue) => {
                     const dialCode = country.dialCode;
-                    // El número es todo lo que viene después del código de país
                     const pureNumber = value.slice(dialCode.length);
                     
                     setFormData({
@@ -137,7 +140,7 @@ const ContactModal = ({ isOpen, onClose }) => {
                       telefono: {
                         codigoPais: dialCode,
                         numero: pureNumber,
-                        formateado: formattedValue // Guardamos el formato amigable: +56 9 1234 5678
+                        formateado: formattedValue 
                       }
                     });
                   }}
