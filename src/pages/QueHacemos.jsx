@@ -49,8 +49,7 @@ const QueHacemos = () => {
               <h2>Para quién existe VisualCore</h2>
               <p>
                 Empresas medianas y grandes que operan <strong>sistemas críticos</strong> y valoran la 
-                estabilidad, escalabilidad y seguridad. Nuestro enfoque está en clientes que buscan &amp;
-                <strong>respaldo técnico senior</strong> por sobre la experimentación inmadura.
+                estabilidad, escalabilidad y seguridad. Nuestro enfoque está en clientes que buscan <strong>respaldo técnico senior</strong> por sobre la experimentación inmadura.
               </p>
               <div className="target-features">
                 <span><ShieldCheck size={16} /> Experiencia Corporativa</span>
