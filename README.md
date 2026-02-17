@@ -19,18 +19,15 @@ Listado de rutas de carpetas front end
 
 |   .gitignore
 |   eslint.config.js
-|   estructura.txt
 |   index.html
 |   package-lock.json
 |   package.json
 |   README.md
-|   visual-core-digital-logo.png
 |   vite.config.js
 |   
 +---node_modules
-|   |       
-|   +---.vite
-               
+\---public
+    |   visual-core-digital-logo.png                  
 \---src
     |   App.css
     |   App.jsx
@@ -48,6 +45,7 @@ Listado de rutas de carpetas front end
     |       Footer.jsx
     |       Header.css
     |       Header.jsx
+    |       ScrollToTop.jsx
     |       
     \---pages
             Capacitaciones.css
